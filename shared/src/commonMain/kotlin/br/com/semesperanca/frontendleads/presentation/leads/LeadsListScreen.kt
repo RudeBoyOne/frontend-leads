@@ -28,6 +28,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -35,6 +36,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -50,6 +52,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.semesperanca.frontendleads.presentation.ui.AddButton
 import br.com.semesperanca.frontendleads.presentation.ui.AppColors
 import br.com.semesperanca.frontendleads.presentation.ui.FilterItem
 import br.com.semesperanca.frontendleads.presentation.ui.FilterRow
@@ -58,9 +61,11 @@ import br.com.semesperanca.frontendleads.presentation.ui.Formatters
 import br.com.semesperanca.frontendleads.presentation.ui.LeadSkeletonList
 import br.com.semesperanca.frontendleads.presentation.ui.Pill
 import br.com.semesperanca.frontendleads.presentation.ui.SearchField
+import br.com.semesperanca.frontendleads.presentation.ui.form.DynamicForm
 import br.com.semesperanca.frontendleads.resources.Res
 import br.com.semesperanca.frontendleads.resources.archive
 import br.com.semesperanca.frontendleads.resources.calendar_month
+import br.com.semesperanca.frontendleads.resources.close
 import br.com.semesperanca.frontendleads.resources.history
 import br.com.semesperanca.frontendleads.resources.inbox
 import br.com.semesperanca.frontendleads.resources.list
@@ -93,6 +98,21 @@ fun LeadsListScreen(
     val dismissedNewIds = remember { mutableStateListOf<String>() }
     fun dismissNew(id: String) {
         if (id !in dismissedNewIds) dismissedNewIds += id
+    }
+
+    var showForm by remember { mutableStateOf(false) }
+
+    if (showForm) {
+        val formValues = remember {
+            mutableStateMapOf<String, String>().apply { putAll(leadFormDefaults()) }
+        }
+        LeadFormScreen(
+            values = formValues,
+            onValueChange = { key, value -> formValues[key] = value },
+            onSubmit = { showForm = false },
+            onDismiss = { showForm = false },
+        )
+        return
     }
 
     Column(modifier = Modifier.fillMaxSize().background(AppColors.Gray50)) {
@@ -158,6 +178,12 @@ fun LeadsListScreen(
                     }
                 }
             }
+
+            AddButton(
+                onClick = { showForm = true },
+                contentDescription = "Novo Lead",
+                modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
+            )
         }
     }
 
@@ -569,6 +595,51 @@ private fun ActionSheetItem(
             text = label,
             color = AppColors.Gray900,
             fontSize = 15.sp,
+        )
+    }
+}
+
+@Composable
+private fun LeadFormScreen(
+    values: Map<String, String>,
+    onValueChange: (String, String) -> Unit,
+    onSubmit: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(AppColors.Gray50),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(AppColors.White)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onDismiss) {
+                Icon(
+                    painter = painterResource(Res.drawable.close),
+                    contentDescription = "Fechar",
+                    tint = AppColors.Gray700,
+                )
+            }
+            Text(
+                text = "Novo Lead",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = AppColors.Gray900,
+            )
+        }
+        DynamicForm(
+            sections = leadFormSections,
+            values = values,
+            onValueChange = onValueChange,
+            onSubmit = onSubmit,
+            onClear = { leadFormFields.forEach { onValueChange(it.key, "") } },
+            modifier = Modifier.weight(1f),
+            submitLabel = "Gravar",
         )
     }
 }

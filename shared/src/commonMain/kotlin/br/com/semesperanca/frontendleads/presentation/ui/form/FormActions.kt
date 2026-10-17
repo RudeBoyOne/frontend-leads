@@ -23,6 +23,7 @@ fun FormActions(
     modifier: Modifier = Modifier,
     saveLabel: String = "Gravar",
     clearLabel: String = "Limpar Campos",
+    isLoading: Boolean = false,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -30,6 +31,7 @@ fun FormActions(
     ) {
         Button(
             onClick = onSave,
+            enabled = !isLoading,
             shape = RoundedCornerShape(10.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = AppColors.Emerald600,
@@ -37,10 +39,15 @@ fun FormActions(
             ),
             modifier = Modifier.weight(1f).height(46.dp),
         ) {
-            Text(text = saveLabel, color = AppColors.White, fontWeight = FontWeight.SemiBold)
+            Text(
+                text = if (isLoading) "Gravando..." else saveLabel,
+                color = AppColors.White,
+                fontWeight = FontWeight.SemiBold,
+            )
         }
         Button(
             onClick = onClear,
+            enabled = !isLoading,
             shape = RoundedCornerShape(10.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Transparent,

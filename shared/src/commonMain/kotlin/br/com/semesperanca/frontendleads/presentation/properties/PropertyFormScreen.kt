@@ -2,12 +2,7 @@ package br.com.semesperanca.frontendleads.presentation.properties
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -16,12 +11,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.semesperanca.frontendleads.presentation.ui.AppColors
 import br.com.semesperanca.frontendleads.presentation.ui.SubHeader
-import br.com.semesperanca.frontendleads.presentation.ui.form.FormActions
-import br.com.semesperanca.frontendleads.presentation.ui.form.ReusableForm
+import br.com.semesperanca.frontendleads.presentation.ui.form.DynamicForm
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -34,23 +27,14 @@ fun PropertyFormScreen(
 
     Column(modifier = Modifier.fillMaxSize().background(AppColors.Gray50)) {
         SubHeader(title = title, onBack = onBack)
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-        ) {
-            ReusableForm(
-                fields = propertyFormFields,
-                values = state.values,
-                onValueChange = viewModel::onFieldChange,
-            )
-            Spacer(modifier = Modifier.height(20.dp))
-            FormActions(
-                onSave = viewModel::onSave,
-                onClear = viewModel::clearFields,
-            )
-        }
+        DynamicForm(
+            sections = propertyFormSections,
+            values = state.values,
+            onValueChange = viewModel::onFieldChange,
+            onSubmit = viewModel::onSave,
+            onClear = viewModel::clearFields,
+            modifier = Modifier.weight(1f),
+        )
     }
 
     if (state.showUnavailableNotice) {

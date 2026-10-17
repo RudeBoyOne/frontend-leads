@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -37,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import br.com.semesperanca.frontendleads.presentation.ui.AppColors
 import br.com.semesperanca.frontendleads.presentation.ui.ModalSheet
 import br.com.semesperanca.frontendleads.presentation.ui.RoundedTextField
+import br.com.semesperanca.frontendleads.presentation.ui.form.FormActions
 import br.com.semesperanca.frontendleads.resources.Res
 import br.com.semesperanca.frontendleads.resources.visibility
 import br.com.semesperanca.frontendleads.resources.visibility_off
@@ -177,67 +176,51 @@ fun UserFormSheet(
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-            Button(
-                onClick = onDismiss,
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.White,
-                    contentColor = AppColors.Gray600,
-                ),
-                modifier = Modifier.weight(1f).height(46.dp),
-            ) {
-                Text(text = "Cancelar", color = AppColors.Gray600, fontWeight = FontWeight.SemiBold)
-            }
-            Button(
-                onClick = {
-                    if (name.isBlank() || email.isBlank() || password.isBlank()) {
-                        error = "Preencha nome, e-mail e senha"
-                        return@Button
-                    }
-                    when (role) {
-                        UserRole.REAL_ESTATE_AGENT -> {
-                            if (creci.isBlank() || branchOfficeId.isBlank()) {
-                                error = "Preencha CRECI e Filial (ID)"
-                                return@Button
-                            }
-                        }
+        FormActions(
+            onSave = {
+                val validationError = when {
+                    name.isBlank() || email.isBlank() || password.isBlank() ->
+                        "Preencha nome, e-mail e senha"
 
-                        UserRole.MANAGER -> {
-                            if (branchOfficeId.isBlank()) {
-                                error = "Preencha Filial (ID)"
-                                return@Button
-                            }
-                        }
+                    role == UserRole.REAL_ESTATE_AGENT && (creci.isBlank() || branchOfficeId.isBlank()) ->
+                        "Preencha CRECI e Filial (ID)"
 
-                        UserRole.BRANCH_OWNER -> {
-                            if (realEstateAgencyId.isBlank()) {
-                                error = "Preencha Agência (ID)"
-                                return@Button
-                            }
-                        }
-                    }
-                    val user = UserUi(
-                        name = name.trim(),
-                        email = email.trim(),
-                        role = role,
-                        creci = creci.trim().takeIf { it.isNotEmpty() },
-                        phone = phone.trim().takeIf { it.isNotEmpty() },
-                        branchOfficeId = branchOfficeId.trim().takeIf { it.isNotEmpty() },
-                        realEstateAgencyId = realEstateAgencyId.trim().takeIf { it.isNotEmpty() },
+                    role == UserRole.MANAGER && branchOfficeId.isBlank() ->
+                        "Preencha Filial (ID)"
+
+                    role == UserRole.BRANCH_OWNER && realEstateAgencyId.isBlank() ->
+                        "Preencha Agência (ID)"
+
+                    else -> null
+                }
+                error = validationError
+                if (validationError == null) {
+                    onSave(
+                        UserUi(
+                            name = name.trim(),
+                            email = email.trim(),
+                            role = role,
+                            creci = creci.trim().takeIf { it.isNotEmpty() },
+                            phone = phone.trim().takeIf { it.isNotEmpty() },
+                            branchOfficeId = branchOfficeId.trim().takeIf { it.isNotEmpty() },
+                            realEstateAgencyId = realEstateAgencyId.trim().takeIf { it.isNotEmpty() },
+                        ),
                     )
-                    onSave(user)
-                },
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.Emerald600,
-                    contentColor = AppColors.White,
-                ),
-                modifier = Modifier.weight(1f).height(46.dp),
-            ) {
-                Text(text = "Salvar", color = AppColors.White, fontWeight = FontWeight.SemiBold)
-            }
-        }
+                }
+            },
+            onClear = {
+                name = ""
+                email = ""
+                password = ""
+                creci = ""
+                branchOfficeId = ""
+                realEstateAgencyId = ""
+                phone = ""
+                error = null
+            },
+            saveLabel = "Gravar",
+            clearLabel = "Limpar Campos",
+        )
     }
 }
 

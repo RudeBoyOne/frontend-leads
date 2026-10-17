@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,44 +34,97 @@ import br.com.semesperanca.frontendleads.resources.Res
 import br.com.semesperanca.frontendleads.resources.arrow_drop_down
 import org.jetbrains.compose.resources.painterResource
 
+private const val GRID_COLUMNS = 12
+
 @Composable
 fun ReusableForm(
-    fields: List<FormField>,
+    sections: List<FormSection>,
     values: Map<String, String>,
     onValueChange: (key: String, value: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        fields.forEach { field ->
-            val value = values[field.key].orEmpty()
-            val hint = field.placeholder.ifBlank { field.label }
-            val placeholder = if (field.required) "$hint *" else hint
-
-            when (field.type) {
-                FormFieldType.DROPDOWN -> DropdownField(
-                    value = value,
-                    placeholder = placeholder,
-                    options = field.options,
-                    onSelect = { onValueChange(field.key, it) },
-                )
-
-                else -> RoundedTextField(
-                    value = value,
-                    onValueChange = { input ->
-                        val limited = field.maxLength?.let { input.take(it) } ?: input
-                        onValueChange(field.key, limited)
-                    },
-                    placeholder = placeholder,
-                    multiline = field.type == FormFieldType.MULTILINE,
-                    minHeight = if (field.type == FormFieldType.MULTILINE) 96 else 0,
-                    keyboardType = when (field.type) {
-                        FormFieldType.INTEGER -> KeyboardType.Number
-                        FormFieldType.DECIMAL, FormFieldType.CURRENCY -> KeyboardType.Decimal
-                        else -> KeyboardType.Text
-                    },
-                )
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        sections.forEach { section ->
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                section.title?.let {
+                    Text(
+                        text = it,
+                        color = AppColors.Gray500,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+                packRows(section.fields).forEach { row ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        row.forEach { field ->
+                            Box(modifier = Modifier.weight(field.width.span.toFloat())) {
+                                FormFieldItem(
+                                    field = field,
+                                    value = values[field.key].orEmpty(),
+                                    onValueChange = onValueChange,
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
+    }
+}
+
+private fun packRows(fields: List<FormField>): List<List<FormField>> {
+    val rows = mutableListOf<List<FormField>>()
+    var current = mutableListOf<FormField>()
+    var used = 0
+    fields.forEach { field ->
+        val span = field.width.span
+        if (used + span > GRID_COLUMNS && current.isNotEmpty()) {
+            rows += current
+            current = mutableListOf()
+            used = 0
+        }
+        current += field
+        used += span
+    }
+    if (current.isNotEmpty()) rows += current
+    return rows
+}
+
+@Composable
+private fun FormFieldItem(
+    field: FormField,
+    value: String,
+    onValueChange: (key: String, value: String) -> Unit,
+) {
+    val hint = field.placeholder.ifBlank { field.label }
+    val placeholder = if (field.required) "$hint *" else hint
+
+    when (field.type) {
+        FormFieldType.DROPDOWN -> DropdownField(
+            value = value,
+            placeholder = placeholder,
+            options = field.options,
+            onSelect = { onValueChange(field.key, it) },
+        )
+
+        else -> RoundedTextField(
+            value = value,
+            onValueChange = { input ->
+                val limited = field.maxLength?.let { input.take(it) } ?: input
+                onValueChange(field.key, limited)
+            },
+            placeholder = placeholder,
+            multiline = field.type == FormFieldType.MULTILINE,
+            minHeight = if (field.type == FormFieldType.MULTILINE) 96 else 0,
+            keyboardType = when (field.type) {
+                FormFieldType.INTEGER -> KeyboardType.Number
+                FormFieldType.DECIMAL, FormFieldType.CURRENCY -> KeyboardType.Decimal
+                else -> KeyboardType.Text
+            },
+        )
     }
 }
 

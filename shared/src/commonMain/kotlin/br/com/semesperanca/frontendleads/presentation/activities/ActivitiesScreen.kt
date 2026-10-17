@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -50,6 +51,10 @@ fun ActivitiesScreen() {
     val viewModel: ActivitiesViewModel = koinViewModel()
     val state by viewModel.uiState.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
+
+    DisposableEffect(Unit) {
+        onDispose { viewModel.dismissForm() }
+    }
 
     if (state.showForm) {
         val editing = state.editingActivity
@@ -219,11 +224,12 @@ private fun ActivityFormScreen(
             )
         }
         DynamicForm(
-            fields = activityFormFields,
+            sections = activityFormSections,
             values = values,
             onValueChange = onValueChange,
             onSubmit = onSubmit,
             onClear = { activityFormFields.forEach { onValueChange(it.key, "") } },
+            modifier = Modifier.weight(1f),
             submitLabel = "Gravar",
             isLoading = isLoading,
             errorMessage = error,

@@ -5,14 +5,33 @@ import br.com.semesperanca.frontendleads.data.dto.TeamDto
 import br.com.semesperanca.frontendleads.data.dto.UpdateTeamRequestDto
 import br.com.semesperanca.frontendleads.presentation.ui.form.FormField
 import br.com.semesperanca.frontendleads.presentation.ui.form.FormFieldType
+import br.com.semesperanca.frontendleads.presentation.ui.form.FormFieldWidth
+import br.com.semesperanca.frontendleads.presentation.ui.form.FormSection
 
-val teamFormFields: List<FormField> = listOf(
-    FormField(key = "managerId", label = "ID do Gerente", required = true),
-    FormField(key = "name", label = "Nome do Time", required = true, maxLength = 100),
-    FormField(key = "description", label = "Descrição", type = FormFieldType.MULTILINE, maxLength = 255),
-    FormField(key = "maxAgents", label = "Máx. Corretores", type = FormFieldType.INTEGER),
-    FormField(key = "goalAmount", label = "Meta (R$)", type = FormFieldType.CURRENCY),
+val teamFormSections: List<FormSection> = listOf(
+    FormSection(
+        fields = listOf(
+            FormField(key = "managerId", label = "ID do Gerente", required = true),
+            FormField(key = "name", label = "Nome do Time", required = true, maxLength = 100),
+            FormField(key = "description", label = "Descrição", type = FormFieldType.MULTILINE, maxLength = 255),
+            FormField(
+                key = "maxAgents",
+                label = "Máx. Corretores",
+                type = FormFieldType.INTEGER,
+                maxLength = 3,
+                width = FormFieldWidth.HALF,
+            ),
+            FormField(
+                key = "goalAmount",
+                label = "Meta (R$)",
+                type = FormFieldType.CURRENCY,
+                width = FormFieldWidth.HALF,
+            ),
+        ),
+    ),
 )
+
+val teamFormFields: List<FormField> = teamFormSections.flatMap { it.fields }
 
 fun teamFormDefaults(team: TeamDto? = null): Map<String, String> = mapOf(
     "managerId" to (team?.managerId ?: ""),

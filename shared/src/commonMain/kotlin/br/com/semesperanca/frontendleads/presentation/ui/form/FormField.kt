@@ -10,6 +10,12 @@ enum class FormFieldType {
     DATE_TIME,
 }
 
+enum class FormFieldWidth(val span: Int) {
+    FULL(12),
+    HALF(6),
+    THIRD(4),
+}
+
 data class FormOption(
     val value: String,
     val label: String,
@@ -23,4 +29,10 @@ data class FormField(
     val placeholder: String = "",
     val options: List<FormOption> = emptyList(),
     val maxLength: Int? = null,
+    val width: FormFieldWidth = FormFieldWidth.FULL,
+)
+
+data class FormSection(
+    val title: String? = null,
+    val fields: List<FormField>,
 )

@@ -3,7 +3,9 @@ package br.com.semesperanca.frontendleads.presentation.properties
 import br.com.semesperanca.frontendleads.data.dto.CreatePropertyRequestDto
 import br.com.semesperanca.frontendleads.presentation.ui.form.FormField
 import br.com.semesperanca.frontendleads.presentation.ui.form.FormFieldType
+import br.com.semesperanca.frontendleads.presentation.ui.form.FormFieldWidth
 import br.com.semesperanca.frontendleads.presentation.ui.form.FormOption
+import br.com.semesperanca.frontendleads.presentation.ui.form.FormSection
 
 enum class PropertyStatus(val value: String, val label: String) {
     AVAILABLE("available", "Disponível"),
@@ -21,31 +23,72 @@ enum class PropertyType(val label: String) {
     RURAL("Rural"),
 }
 
-val propertyFormFields: List<FormField> = listOf(
-    FormField(key = "title", label = "Título", required = true, maxLength = 150),
-    FormField(key = "description", label = "Descrição", type = FormFieldType.MULTILINE),
-    FormField(key = "price", label = "Preço", type = FormFieldType.CURRENCY),
-    FormField(
-        key = "propertyType",
-        label = "Tipo",
-        type = FormFieldType.DROPDOWN,
-        options = PropertyType.entries.map { FormOption(value = it.label, label = it.label) },
+val propertyFormSections: List<FormSection> = listOf(
+    FormSection(
+        title = "Informações Básicas",
+        fields = listOf(
+            FormField(key = "title", label = "Título", required = true, maxLength = 150),
+            FormField(key = "description", label = "Descrição", type = FormFieldType.MULTILINE),
+        ),
     ),
-    FormField(key = "bedrooms", label = "Quartos", type = FormFieldType.INTEGER),
-    FormField(key = "bathrooms", label = "Banheiros", type = FormFieldType.INTEGER),
-    FormField(key = "areaSqm", label = "Área (m²)", type = FormFieldType.DECIMAL),
-    FormField(key = "address", label = "Endereço"),
-    FormField(key = "city", label = "Cidade"),
-    FormField(key = "state", label = "UF", maxLength = 2),
-    FormField(key = "zipCode", label = "CEP", maxLength = 10),
-    FormField(key = "branchOfficeId", label = "Filial (ID)", required = true),
-    FormField(
-        key = "status",
-        label = "Situação",
-        type = FormFieldType.DROPDOWN,
-        options = PropertyStatus.entries.map { FormOption(value = it.value, label = it.label) },
+    FormSection(
+        title = "Características",
+        fields = listOf(
+            FormField(key = "price", label = "Preço", type = FormFieldType.CURRENCY, width = FormFieldWidth.HALF),
+            FormField(
+                key = "propertyType",
+                label = "Tipo",
+                type = FormFieldType.DROPDOWN,
+                width = FormFieldWidth.HALF,
+                options = PropertyType.entries.map { FormOption(value = it.label, label = it.label) },
+            ),
+            FormField(
+                key = "bedrooms",
+                label = "Quartos",
+                type = FormFieldType.INTEGER,
+                maxLength = 2,
+                width = FormFieldWidth.THIRD,
+            ),
+            FormField(
+                key = "bathrooms",
+                label = "Banheiros",
+                type = FormFieldType.INTEGER,
+                maxLength = 2,
+                width = FormFieldWidth.THIRD,
+            ),
+            FormField(
+                key = "areaSqm",
+                label = "Área (m²)",
+                type = FormFieldType.DECIMAL,
+                width = FormFieldWidth.THIRD,
+            ),
+            FormField(
+                key = "status",
+                label = "Situação",
+                type = FormFieldType.DROPDOWN,
+                width = FormFieldWidth.HALF,
+                options = PropertyStatus.entries.map { FormOption(value = it.value, label = it.label) },
+            ),
+        ),
+    ),
+    FormSection(
+        title = "Endereço",
+        fields = listOf(
+            FormField(key = "address", label = "Endereço"),
+            FormField(key = "city", label = "Cidade"),
+            FormField(key = "state", label = "UF", maxLength = 2, width = FormFieldWidth.THIRD),
+            FormField(key = "zipCode", label = "CEP", maxLength = 10, width = FormFieldWidth.THIRD),
+        ),
+    ),
+    FormSection(
+        title = "Vinculação",
+        fields = listOf(
+            FormField(key = "branchOfficeId", label = "Filial (ID)", required = true),
+        ),
     ),
 )
+
+val propertyFormFields: List<FormField> = propertyFormSections.flatMap { it.fields }
 
 fun propertyFormDefaults(): Map<String, String> = mapOf(
     "status" to PropertyStatus.AVAILABLE.value,

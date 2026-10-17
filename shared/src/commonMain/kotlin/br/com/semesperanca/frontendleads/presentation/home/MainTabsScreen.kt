@@ -34,32 +34,38 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.semesperanca.frontendleads.presentation.activities.ActivitiesScreen
+import br.com.semesperanca.frontendleads.presentation.agencies.AgenciesTabScreen
 import br.com.semesperanca.frontendleads.presentation.auth.LoginViewModel
 import br.com.semesperanca.frontendleads.presentation.leads.LeadDetailScreen
 import br.com.semesperanca.frontendleads.presentation.leads.LeadUi
 import br.com.semesperanca.frontendleads.presentation.leads.LeadsListScreen
 import br.com.semesperanca.frontendleads.presentation.leads.LeadsViewModel
 import br.com.semesperanca.frontendleads.presentation.properties.PropertiesScreen
+import br.com.semesperanca.frontendleads.presentation.teams.TeamsScreen
 import br.com.semesperanca.frontendleads.presentation.ui.AppColors
+import br.com.semesperanca.frontendleads.presentation.users.UsersScreen
 import br.com.semesperanca.frontendleads.resources.Res
 import br.com.semesperanca.frontendleads.resources.apartment
 import br.com.semesperanca.frontendleads.resources.calendar_month
+import br.com.semesperanca.frontendleads.resources.domain
 import br.com.semesperanca.frontendleads.resources.groups
 import br.com.semesperanca.frontendleads.resources.list
 import br.com.semesperanca.frontendleads.resources.logout
 import br.com.semesperanca.frontendleads.resources.manage_accounts
 import org.jetbrains.compose.resources.DrawableResource
-import br.com.semesperanca.frontendleads.presentation.activities.ActivitiesScreen
-import br.com.semesperanca.frontendleads.presentation.teams.TeamsScreen
 import org.jetbrains.compose.resources.painterResource
-import br.com.semesperanca.frontendleads.presentation.users.UsersScreen
 import org.koin.compose.viewmodel.koinViewModel
 
-private enum class MainTab(val label: String, val icon: DrawableResource) {
+private enum class MainTab(
+    val label: String,
+    val icon: DrawableResource,
+) {
     LEADS("Leads", Res.drawable.list),
     EQUIPES("Equipes", Res.drawable.groups),
     ATIVIDADES("Atividades", Res.drawable.calendar_month),
     IMOVEIS("Imóveis", Res.drawable.apartment),
+    AGENCIAS("Agências", Res.drawable.domain),
     USUARIOS("Usuários", Res.drawable.manage_accounts),
 }
 
@@ -91,27 +97,46 @@ fun MainTabsScreen() {
         Header(onLogoutClick = { showLogoutDialog = true })
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             when (selectedTab) {
-                MainTab.LEADS -> LeadsListScreen(
-                    onLeadClick = { leadDetail = it },
-                )
+                MainTab.LEADS -> {
+                    LeadsListScreen(
+                        onLeadClick = { leadDetail = it },
+                    )
+                }
 
-                MainTab.EQUIPES -> TeamsScreen()
-                MainTab.ATIVIDADES -> ActivitiesScreen()
-                MainTab.IMOVEIS -> PropertiesScreen()
-                MainTab.USUARIOS -> UsersScreen()
+                MainTab.EQUIPES -> {
+                    TeamsScreen()
+                }
+
+                MainTab.ATIVIDADES -> {
+                    ActivitiesScreen()
+                }
+
+                MainTab.IMOVEIS -> {
+                    PropertiesScreen()
+                }
+
+                MainTab.AGENCIAS -> {
+                    AgenciesTabScreen()
+                }
+
+                MainTab.USUARIOS -> {
+                    UsersScreen()
+                }
             }
         }
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(AppColors.White)
-                .navigationBarsPadding(),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(AppColors.White)
+                    .navigationBarsPadding(),
         ) {
             HorizontalDivider(thickness = 1.dp, color = AppColors.Gray200)
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 MainTab.entries.forEach { tab ->
@@ -143,10 +168,11 @@ fun MainTabsScreen() {
                         showLogoutDialog = false
                         loginViewModel.logout()
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AppColors.Red600,
-                        contentColor = AppColors.White,
-                    ),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = AppColors.Red600,
+                            contentColor = AppColors.White,
+                        ),
                     shape = RoundedCornerShape(8.dp),
                 ) {
                     Text("Sair")
@@ -164,10 +190,11 @@ fun MainTabsScreen() {
 @Composable
 private fun Header(onLogoutClick: () -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 16.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -196,12 +223,13 @@ private fun TabBarItem(
     onClick: () -> Unit,
 ) {
     Column(
-        modifier = modifier
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-            ) { onClick() }
-            .padding(vertical = 6.dp),
+        modifier =
+            modifier
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                ) { onClick() }
+                .padding(vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(

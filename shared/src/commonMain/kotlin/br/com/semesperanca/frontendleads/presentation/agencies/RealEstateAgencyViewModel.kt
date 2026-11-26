@@ -17,8 +17,6 @@ data class RealEstateAgenciesUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val successMessage: String? = null,
-    val showForm: Boolean = false,
-    val editingAgency: RealEstateAgencyDto? = null,
 )
 
 class RealEstateAgencyViewModel(
@@ -77,18 +75,6 @@ class RealEstateAgencyViewModel(
         }
     }
 
-    fun showCreateForm() {
-        _uiState.value = _uiState.value.copy(showForm = true, editingAgency = null)
-    }
-
-    fun showEditForm(agency: RealEstateAgencyDto) {
-        _uiState.value = _uiState.value.copy(showForm = true, editingAgency = agency)
-    }
-
-    fun dismissForm() {
-        _uiState.value = _uiState.value.copy(showForm = false, editingAgency = null)
-    }
-
     fun create(request: CreateRealEstateAgencyRequestDto) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
@@ -97,7 +83,6 @@ class RealEstateAgencyViewModel(
                     _uiState.value =
                         _uiState.value.copy(
                             isLoading = false,
-                            showForm = false,
                             successMessage = "Agência cadastrada com sucesso!",
                         )
                     loadAgencies()
@@ -125,7 +110,6 @@ class RealEstateAgencyViewModel(
                     _uiState.value =
                         _uiState.value.copy(
                             isLoading = false,
-                            showForm = false,
                             successMessage = "Agência atualizada com sucesso!",
                         )
                     loadAgencies()

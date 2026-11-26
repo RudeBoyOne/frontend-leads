@@ -23,7 +23,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
@@ -35,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import br.com.semesperanca.frontendleads.presentation.ui.AppColors
 import br.com.semesperanca.frontendleads.presentation.ui.ModalSheet
 import br.com.semesperanca.frontendleads.presentation.ui.RoundedTextField
+import br.com.semesperanca.frontendleads.presentation.ui.SubHeader
 import br.com.semesperanca.frontendleads.presentation.ui.form.FormActions
 import br.com.semesperanca.frontendleads.resources.Res
 import br.com.semesperanca.frontendleads.resources.visibility
@@ -58,14 +58,8 @@ fun UserFormSheet(
     var error by remember { mutableStateOf<String?>(null) }
 
     ModalSheet(onDismiss = onDismiss) {
-        Text(
-            text = "Novo Usuário",
-            color = AppColors.Gray900,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+        SubHeader(title = "Novo Usuário", onBack = onDismiss)
+        Spacer(modifier = Modifier.height(4.dp))
 
         Text(text = "Tipo de Usuário", color = AppColors.Gray400, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
         Spacer(modifier = Modifier.height(8.dp))

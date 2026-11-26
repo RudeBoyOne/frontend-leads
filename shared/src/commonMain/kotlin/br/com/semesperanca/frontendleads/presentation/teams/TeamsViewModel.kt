@@ -17,8 +17,6 @@ data class TeamsUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val successMessage: String? = null,
-    val showForm: Boolean = false,
-    val editingTeam: TeamDto? = null,
 )
 
 class TeamsViewModel(private val api: TeamApi) : ViewModel() {
@@ -58,25 +56,13 @@ class TeamsViewModel(private val api: TeamApi) : ViewModel() {
         }
     }
 
-    fun showCreateForm() {
-        _uiState.value = _uiState.value.copy(showForm = true, editingTeam = null)
-    }
-
-    fun showEditForm(team: TeamDto) {
-        _uiState.value = _uiState.value.copy(showForm = true, editingTeam = team)
-    }
-
-    fun dismissForm() {
-        _uiState.value = _uiState.value.copy(showForm = false, editingTeam = null)
-    }
-
     fun create(request: CreateTeamRequestDto) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             when (val result = api.create(request)) {
                 is ApiResult.Success -> {
                     _uiState.value = _uiState.value.copy(
-                        isLoading = false, showForm = false,
+                        isLoading = false,
                         successMessage = "Time criado com sucesso!",
                     )
                     loadTeams()
@@ -94,7 +80,7 @@ class TeamsViewModel(private val api: TeamApi) : ViewModel() {
             when (val result = api.update(id, request)) {
                 is ApiResult.Success -> {
                     _uiState.value = _uiState.value.copy(
-                        isLoading = false, showForm = false,
+                        isLoading = false,
                         successMessage = "Time atualizado com sucesso!",
                     )
                     loadTeams()

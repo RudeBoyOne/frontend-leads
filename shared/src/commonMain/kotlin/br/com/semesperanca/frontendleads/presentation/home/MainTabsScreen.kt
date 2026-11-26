@@ -34,17 +34,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.com.semesperanca.frontendleads.presentation.activities.ActivitiesScreen
-import br.com.semesperanca.frontendleads.presentation.agencies.AgenciesTabScreen
-import br.com.semesperanca.frontendleads.presentation.auth.LoginViewModel
-import br.com.semesperanca.frontendleads.presentation.leads.LeadDetailScreen
-import br.com.semesperanca.frontendleads.presentation.leads.LeadUi
-import br.com.semesperanca.frontendleads.presentation.leads.LeadsListScreen
-import br.com.semesperanca.frontendleads.presentation.leads.LeadsViewModel
-import br.com.semesperanca.frontendleads.presentation.properties.PropertiesScreen
-import br.com.semesperanca.frontendleads.presentation.teams.TeamsScreen
+import br.com.semesperanca.frontendleads.presentation.navigation.AppNavKey
 import br.com.semesperanca.frontendleads.presentation.ui.AppColors
-import br.com.semesperanca.frontendleads.presentation.users.UsersScreen
 import br.com.semesperanca.frontendleads.resources.Res
 import br.com.semesperanca.frontendleads.resources.apartment
 import br.com.semesperanca.frontendleads.resources.calendar_month
@@ -55,74 +46,33 @@ import br.com.semesperanca.frontendleads.resources.logout
 import br.com.semesperanca.frontendleads.resources.manage_accounts
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
-import org.koin.compose.viewmodel.koinViewModel
 
 private enum class MainTab(
     val label: String,
     val icon: DrawableResource,
+    val key: AppNavKey,
 ) {
-    LEADS("Leads", Res.drawable.list),
-    EQUIPES("Equipes", Res.drawable.groups),
-    ATIVIDADES("Atividades", Res.drawable.calendar_month),
-    IMOVEIS("Imóveis", Res.drawable.apartment),
-    AGENCIAS("Agências", Res.drawable.domain),
-    USUARIOS("Usuários", Res.drawable.manage_accounts),
+    LEADS("Leads", Res.drawable.list, AppNavKey.Leads),
+    EQUIPES("Equipes", Res.drawable.groups, AppNavKey.Teams),
+    ATIVIDADES("Atividades", Res.drawable.calendar_month, AppNavKey.Activities),
+    IMOVEIS("Imóveis", Res.drawable.apartment, AppNavKey.Properties),
+    AGENCIAS("Agências", Res.drawable.domain, AppNavKey.Agencies),
+    USUARIOS("Usuários", Res.drawable.manage_accounts, AppNavKey.Users),
 }
 
 @Composable
-fun MainTabsScreen() {
-    var selectedTab by remember { mutableStateOf(MainTab.LEADS) }
-    var leadDetail by remember { mutableStateOf<LeadUi?>(null) }
-    val leadsViewModel: LeadsViewModel = koinViewModel()
-    val loginViewModel: LoginViewModel = koinViewModel()
+fun MainTabsScreen(
+    currentTopLevel: AppNavKey,
+    onTabClick: (AppNavKey) -> Unit,
+    onLogout: () -> Unit,
+    content: @Composable () -> Unit,
+) {
     var showLogoutDialog by remember { mutableStateOf(false) }
-
-    if (leadDetail != null) {
-        LeadDetailScreen(
-            lead = leadDetail!!,
-            onBack = { leadDetail = null },
-            onArchive = {
-                leadsViewModel.archiveLead(it)
-                leadDetail = null
-            },
-            onUnarchive = {
-                leadsViewModel.unarchiveLead(it)
-                leadDetail = null
-            },
-        )
-        return
-    }
 
     Column(modifier = Modifier.fillMaxSize().background(AppColors.Gray50)) {
         Header(onLogoutClick = { showLogoutDialog = true })
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            when (selectedTab) {
-                MainTab.LEADS -> {
-                    LeadsListScreen(
-                        onLeadClick = { leadDetail = it },
-                    )
-                }
-
-                MainTab.EQUIPES -> {
-                    TeamsScreen()
-                }
-
-                MainTab.ATIVIDADES -> {
-                    ActivitiesScreen()
-                }
-
-                MainTab.IMOVEIS -> {
-                    PropertiesScreen()
-                }
-
-                MainTab.AGENCIAS -> {
-                    AgenciesTabScreen()
-                }
-
-                MainTab.USUARIOS -> {
-                    UsersScreen()
-                }
-            }
+            content()
         }
         Column(
             modifier =
@@ -143,11 +93,9 @@ fun MainTabsScreen() {
                     TabBarItem(
                         title = tab.label,
                         icon = tab.icon,
-                        selected = selectedTab == tab,
+                        selected = currentTopLevel == tab.key,
                         modifier = Modifier.weight(1f),
-                    ) {
-                        selectedTab = tab
-                    }
+                    ) { onTabClick(tab.key) }
                 }
             }
         }
@@ -166,7 +114,7 @@ fun MainTabsScreen() {
                 Button(
                     onClick = {
                         showLogoutDialog = false
-                        loginViewModel.logout()
+                        onLogout()
                     },
                     colors =
                         ButtonDefaults.buttonColors(

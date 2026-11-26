@@ -17,8 +17,6 @@ data class BranchOfficesUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val successMessage: String? = null,
-    val showForm: Boolean = false,
-    val editingOffice: BranchOfficeDto? = null,
 )
 
 class BranchOfficeViewModel(
@@ -77,18 +75,6 @@ class BranchOfficeViewModel(
         }
     }
 
-    fun showCreateForm() {
-        _uiState.value = _uiState.value.copy(showForm = true, editingOffice = null)
-    }
-
-    fun showEditForm(office: BranchOfficeDto) {
-        _uiState.value = _uiState.value.copy(showForm = true, editingOffice = office)
-    }
-
-    fun dismissForm() {
-        _uiState.value = _uiState.value.copy(showForm = false, editingOffice = null)
-    }
-
     fun create(request: CreateBranchOfficeRequestDto) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
@@ -97,7 +83,6 @@ class BranchOfficeViewModel(
                     _uiState.value =
                         _uiState.value.copy(
                             isLoading = false,
-                            showForm = false,
                             successMessage = "Filial cadastrada com sucesso!",
                         )
                     loadOffices()
@@ -128,7 +113,6 @@ class BranchOfficeViewModel(
                     _uiState.value =
                         _uiState.value.copy(
                             isLoading = false,
-                            showForm = false,
                             successMessage = "Filial atualizada com sucesso!",
                         )
                     loadOffices()

@@ -61,11 +61,11 @@ import br.com.semesperanca.frontendleads.presentation.ui.Formatters
 import br.com.semesperanca.frontendleads.presentation.ui.LeadSkeletonList
 import br.com.semesperanca.frontendleads.presentation.ui.Pill
 import br.com.semesperanca.frontendleads.presentation.ui.SearchField
+import br.com.semesperanca.frontendleads.presentation.ui.SubHeader
 import br.com.semesperanca.frontendleads.presentation.ui.form.DynamicForm
 import br.com.semesperanca.frontendleads.resources.Res
 import br.com.semesperanca.frontendleads.resources.archive
 import br.com.semesperanca.frontendleads.resources.calendar_month
-import br.com.semesperanca.frontendleads.resources.close
 import br.com.semesperanca.frontendleads.resources.history
 import br.com.semesperanca.frontendleads.resources.inbox
 import br.com.semesperanca.frontendleads.resources.list
@@ -89,6 +89,7 @@ private val FILTERS = LeadFilter.entries
 @Composable
 fun LeadsListScreen(
     onLeadClick: (LeadUi) -> Unit = {},
+    onCreate: () -> Unit = {},
     viewModel: LeadsViewModel = koinViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -98,21 +99,6 @@ fun LeadsListScreen(
     val dismissedNewIds = remember { mutableStateListOf<String>() }
     fun dismissNew(id: String) {
         if (id !in dismissedNewIds) dismissedNewIds += id
-    }
-
-    var showForm by remember { mutableStateOf(false) }
-
-    if (showForm) {
-        val formValues = remember {
-            mutableStateMapOf<String, String>().apply { putAll(leadFormDefaults()) }
-        }
-        LeadFormScreen(
-            values = formValues,
-            onValueChange = { key, value -> formValues[key] = value },
-            onSubmit = { showForm = false },
-            onDismiss = { showForm = false },
-        )
-        return
     }
 
     Column(modifier = Modifier.fillMaxSize().background(AppColors.Gray50)) {
@@ -180,7 +166,7 @@ fun LeadsListScreen(
             }
 
             AddButton(
-                onClick = { showForm = true },
+                onClick = onCreate,
                 contentDescription = "Novo Lead",
                 modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
             )
@@ -600,7 +586,7 @@ private fun ActionSheetItem(
 }
 
 @Composable
-private fun LeadFormScreen(
+fun LeadFormScreen(
     values: Map<String, String>,
     onValueChange: (String, String) -> Unit,
     onSubmit: () -> Unit,
@@ -611,27 +597,7 @@ private fun LeadFormScreen(
             .fillMaxSize()
             .background(AppColors.Gray50),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(AppColors.White)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = onDismiss) {
-                Icon(
-                    painter = painterResource(Res.drawable.close),
-                    contentDescription = "Fechar",
-                    tint = AppColors.Gray700,
-                )
-            }
-            Text(
-                text = "Novo Lead",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = AppColors.Gray900,
-            )
-        }
+        SubHeader(title = "Novo Lead", onBack = onDismiss)
         DynamicForm(
             sections = leadFormSections,
             values = values,

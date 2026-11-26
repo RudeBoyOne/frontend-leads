@@ -42,7 +42,7 @@ private val presentationModule =
         viewModelOf(::LeadDetailViewModel)
         viewModelOf(::PropertyFormViewModel)
         viewModelOf(::LoginViewModel)
-        viewModelOf(::UsersViewModel)
+        single { UsersViewModel() }
         viewModelOf(::TeamsViewModel)
         viewModelOf(::ActivitiesViewModel)
         viewModelOf(::RealEstateAgencyViewModel)

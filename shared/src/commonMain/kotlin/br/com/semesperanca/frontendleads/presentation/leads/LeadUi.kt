@@ -1,7 +1,9 @@
 package br.com.semesperanca.frontendleads.presentation.leads
 
 import br.com.semesperanca.frontendleads.data.dto.LeadDto
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class LeadUi(
     val id: String,
     val name: String,

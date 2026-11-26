@@ -9,6 +9,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import br.com.semesperanca.frontendleads.data.dto.BranchOfficeDto
+import br.com.semesperanca.frontendleads.data.dto.RealEstateAgencyDto
 import br.com.semesperanca.frontendleads.presentation.branches.BranchOfficesScreen
 import br.com.semesperanca.frontendleads.presentation.ui.FilterItem
 import br.com.semesperanca.frontendleads.presentation.ui.FilterRow
@@ -23,7 +25,12 @@ private val AGENCY_FILTERS =
     )
 
 @Composable
-fun AgenciesTabScreen() {
+fun AgenciesTabScreen(
+    onAgencyCreate: () -> Unit = {},
+    onAgencyEdit: (RealEstateAgencyDto) -> Unit = {},
+    onBranchCreate: () -> Unit = {},
+    onBranchEdit: (BranchOfficeDto) -> Unit = {},
+) {
     var selectedIndex by remember { mutableStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -36,8 +43,16 @@ fun AgenciesTabScreen() {
         )
 
         when (selectedIndex) {
-            0 -> RealEstateAgenciesScreen()
-            else -> BranchOfficesScreen()
+            0 ->
+                RealEstateAgenciesScreen(
+                    onCreate = onAgencyCreate,
+                    onEdit = onAgencyEdit,
+                )
+            else ->
+                BranchOfficesScreen(
+                    onCreate = onBranchCreate,
+                    onEdit = onBranchEdit,
+                )
         }
     }
 }

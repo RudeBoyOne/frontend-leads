@@ -20,9 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -33,12 +30,14 @@ import br.com.semesperanca.frontendleads.presentation.ui.AppColors
 import br.com.semesperanca.frontendleads.resources.Res
 import br.com.semesperanca.frontendleads.resources.manage_accounts
 import org.jetbrains.compose.resources.painterResource
-import org.koin.compose.viewmodel.koinViewModel
+import org.koin.compose.koinInject
 
 @Composable
-fun UsersScreen(viewModel: UsersViewModel = koinViewModel()) {
+fun UsersScreen(
+    onCreate: () -> Unit = {},
+    viewModel: UsersViewModel = koinInject(),
+) {
     val uiState by viewModel.uiState.collectAsState()
-    var showForm by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize().background(AppColors.Gray50)) {
         if (uiState.users.isEmpty()) {
@@ -54,23 +53,11 @@ fun UsersScreen(viewModel: UsersViewModel = koinViewModel()) {
             }
         }
 
-        if (!showForm) {
-            AddButton(
-                onClick = { showForm = true },
-                size = 56,
-                contentDescription = "Novo usuário",
-                modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
-            )
-        }
-    }
-
-    if (showForm) {
-        UserFormSheet(
-            onDismiss = { showForm = false },
-            onSave = { user ->
-                viewModel.addUser(user)
-                showForm = false
-            },
+        AddButton(
+            onClick = onCreate,
+            size = 56,
+            contentDescription = "Novo usuário",
+            modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
         )
     }
 }

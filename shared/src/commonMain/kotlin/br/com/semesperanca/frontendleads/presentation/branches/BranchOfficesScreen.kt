@@ -21,7 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -39,9 +38,9 @@ import br.com.semesperanca.frontendleads.presentation.ui.AddButton
 import br.com.semesperanca.frontendleads.presentation.ui.AppColors
 import br.com.semesperanca.frontendleads.presentation.ui.Pill
 import br.com.semesperanca.frontendleads.presentation.ui.SearchField
+import br.com.semesperanca.frontendleads.presentation.ui.SubHeader
 import br.com.semesperanca.frontendleads.presentation.ui.form.DynamicForm
 import br.com.semesperanca.frontendleads.resources.Res
-import br.com.semesperanca.frontendleads.resources.close
 import br.com.semesperanca.frontendleads.resources.delete
 import br.com.semesperanca.frontendleads.resources.edit
 import br.com.semesperanca.frontendleads.resources.storefront
@@ -49,43 +48,13 @@ import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun BranchOfficesScreen() {
+fun BranchOfficesScreen(
+    onCreate: () -> Unit = {},
+    onEdit: (BranchOfficeDto) -> Unit = {},
+) {
     val viewModel: BranchOfficeViewModel = koinViewModel()
     val state by viewModel.uiState.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.dismissForm() }
-    }
-
-    if (state.showForm) {
-        val editing = state.editingOffice
-        val formValues =
-            remember(editing) {
-                mutableStateMapOf<String, String>().apply { putAll(branchOfficeFormDefaults(editing)) }
-            }
-        BranchOfficeFormScreen(
-            isEditing = editing != null,
-            values = formValues,
-            onValueChange = { k, v -> formValues[k] = v },
-            isLoading = state.isLoading,
-            error = state.error,
-            onSubmit = {
-                if (editing != null) {
-                    viewModel.update(
-                        id = editing.id!!,
-                        request = toUpdateBranchOfficeRequest(formValues),
-                        active = branchOfficeStatusOf(formValues),
-                        wasActive = editing.active,
-                    )
-                } else {
-                    viewModel.create(toCreateBranchOfficeRequest(formValues))
-                }
-            },
-            onDismiss = { viewModel.dismissForm() },
-        )
-        return
-    }
 
     Box(modifier = Modifier.fillMaxSize().background(AppColors.Gray50)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -131,7 +100,7 @@ fun BranchOfficesScreen() {
                     items(state.offices) { office ->
                         BranchOfficeCard(
                             office = office,
-                            onEdit = { viewModel.showEditForm(office) },
+                            onEdit = { onEdit(office) },
                             onToggleActive = { office.id?.let { viewModel.toggleActive(it) } },
                             onDelete = { office.id?.let { viewModel.delete(it) } },
                         )
@@ -141,7 +110,7 @@ fun BranchOfficesScreen() {
         }
 
         AddButton(
-            onClick = { viewModel.showCreateForm() },
+            onClick = onCreate,
             size = 56,
             contentDescription = "Nova Filial",
             modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
@@ -210,7 +179,7 @@ private fun BranchOfficeCard(
 }
 
 @Composable
-private fun BranchOfficeFormScreen(
+fun BranchOfficeFormScreen(
     isEditing: Boolean,
     values: Map<String, String>,
     onValueChange: (String, String) -> Unit,
@@ -225,24 +194,7 @@ private fun BranchOfficeFormScreen(
                 .fillMaxSize()
                 .background(AppColors.Gray50),
     ) {
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .background(AppColors.White)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = onDismiss) {
-                Icon(painterResource(Res.drawable.close), contentDescription = "Fechar", tint = AppColors.Gray700)
-            }
-            Text(
-                text = if (isEditing) "Editar Filial" else "Nova Filial",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = AppColors.Gray900,
-            )
-        }
+        SubHeader(title = if (isEditing) "Editar Filial" else "Nova Filial", onBack = onDismiss)
         DynamicForm(
             sections = branchOfficeFormSections,
             values = values,

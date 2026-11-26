@@ -19,7 +19,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -36,9 +35,9 @@ import br.com.semesperanca.frontendleads.data.dto.TeamDto
 import br.com.semesperanca.frontendleads.presentation.ui.AddButton
 import br.com.semesperanca.frontendleads.presentation.ui.AppColors
 import br.com.semesperanca.frontendleads.presentation.ui.SearchField
+import br.com.semesperanca.frontendleads.presentation.ui.SubHeader
 import br.com.semesperanca.frontendleads.presentation.ui.form.DynamicForm
 import br.com.semesperanca.frontendleads.resources.Res
-import br.com.semesperanca.frontendleads.resources.close
 import br.com.semesperanca.frontendleads.resources.delete
 import br.com.semesperanca.frontendleads.resources.edit
 import br.com.semesperanca.frontendleads.resources.groups
@@ -46,37 +45,13 @@ import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun TeamsScreen() {
+fun TeamsScreen(
+    onCreate: () -> Unit = {},
+    onEdit: (TeamDto) -> Unit = {},
+) {
     val viewModel: TeamsViewModel = koinViewModel()
     val state by viewModel.uiState.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.dismissForm() }
-    }
-
-    if (state.showForm) {
-        val editing = state.editingTeam
-        val formValues = remember(editing) {
-            mutableStateMapOf<String, String>().apply { putAll(teamFormDefaults(editing)) }
-        }
-        TeamFormScreen(
-            isEditing = editing != null,
-            values = formValues,
-            onValueChange = { k, v -> formValues[k] = v },
-            isLoading = state.isLoading,
-            error = state.error,
-            onSubmit = {
-                if (editing != null) {
-                    viewModel.update(editing.id!!, toUpdateTeamRequest(formValues))
-                } else {
-                    viewModel.create(toCreateTeamRequest(formValues))
-                }
-            },
-            onDismiss = { viewModel.dismissForm() },
-        )
-        return
-    }
 
     Box(modifier = Modifier.fillMaxSize().background(AppColors.Gray50)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -122,7 +97,7 @@ fun TeamsScreen() {
                     items(state.teams) { team ->
                         TeamCard(
                             team = team,
-                            onEdit = { viewModel.showEditForm(team) },
+                            onEdit = { onEdit(team) },
                             onDelete = { team.id?.let { viewModel.delete(it) } },
                         )
                     }
@@ -131,7 +106,7 @@ fun TeamsScreen() {
         }
 
         AddButton(
-            onClick = { viewModel.showCreateForm() },
+            onClick = onCreate,
             size = 56,
             contentDescription = "Novo Time",
             modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
@@ -177,7 +152,7 @@ private fun TeamCard(team: TeamDto, onEdit: () -> Unit, onDelete: () -> Unit) {
 }
 
 @Composable
-private fun TeamFormScreen(
+fun TeamFormScreen(
     isEditing: Boolean,
     values: Map<String, String>,
     onValueChange: (String, String) -> Unit,
@@ -191,23 +166,7 @@ private fun TeamFormScreen(
             .fillMaxSize()
             .background(AppColors.Gray50),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(AppColors.White)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = onDismiss) {
-                Icon(painterResource(Res.drawable.close), contentDescription = "Fechar", tint = AppColors.Gray700)
-            }
-            Text(
-                text = if (isEditing) "Editar Time" else "Novo Time",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = AppColors.Gray900,
-            )
-        }
+        SubHeader(title = if (isEditing) "Editar Time" else "Novo Time", onBack = onDismiss)
         DynamicForm(
             sections = teamFormSections,
             values = values,

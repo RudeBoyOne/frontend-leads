@@ -19,7 +19,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -37,9 +36,9 @@ import br.com.semesperanca.frontendleads.presentation.ui.AddButton
 import br.com.semesperanca.frontendleads.presentation.ui.AppColors
 import br.com.semesperanca.frontendleads.presentation.ui.Pill
 import br.com.semesperanca.frontendleads.presentation.ui.SearchField
+import br.com.semesperanca.frontendleads.presentation.ui.SubHeader
 import br.com.semesperanca.frontendleads.presentation.ui.form.DynamicForm
 import br.com.semesperanca.frontendleads.resources.Res
-import br.com.semesperanca.frontendleads.resources.close
 import br.com.semesperanca.frontendleads.resources.delete
 import br.com.semesperanca.frontendleads.resources.domain
 import br.com.semesperanca.frontendleads.resources.edit
@@ -47,38 +46,13 @@ import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun RealEstateAgenciesScreen() {
+fun RealEstateAgenciesScreen(
+    onCreate: () -> Unit = {},
+    onEdit: (RealEstateAgencyDto) -> Unit = {},
+) {
     val viewModel: RealEstateAgencyViewModel = koinViewModel()
     val state by viewModel.uiState.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.dismissForm() }
-    }
-
-    if (state.showForm) {
-        val editing = state.editingAgency
-        val formValues =
-            remember(editing) {
-                mutableStateMapOf<String, String>().apply { putAll(realEstateAgencyFormDefaults(editing)) }
-            }
-        RealEstateAgencyFormScreen(
-            isEditing = editing != null,
-            values = formValues,
-            onValueChange = { k, v -> formValues[k] = v },
-            isLoading = state.isLoading,
-            error = state.error,
-            onSubmit = {
-                if (editing != null) {
-                    viewModel.update(editing.id!!, toUpdateRealEstateAgencyRequest(formValues))
-                } else {
-                    viewModel.create(toCreateRealEstateAgencyRequest(formValues))
-                }
-            },
-            onDismiss = { viewModel.dismissForm() },
-        )
-        return
-    }
 
     Box(modifier = Modifier.fillMaxSize().background(AppColors.Gray50)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -124,7 +98,7 @@ fun RealEstateAgenciesScreen() {
                     items(state.agencies) { agency ->
                         RealEstateAgencyCard(
                             agency = agency,
-                            onEdit = { viewModel.showEditForm(agency) },
+                            onEdit = { onEdit(agency) },
                             onDelete = { agency.id?.let { viewModel.delete(it) } },
                         )
                     }
@@ -133,7 +107,7 @@ fun RealEstateAgenciesScreen() {
         }
 
         AddButton(
-            onClick = { viewModel.showCreateForm() },
+            onClick = onCreate,
             size = 56,
             contentDescription = "Nova Agência",
             modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
@@ -196,7 +170,7 @@ private fun RealEstateAgencyCard(
 }
 
 @Composable
-private fun RealEstateAgencyFormScreen(
+fun RealEstateAgencyFormScreen(
     isEditing: Boolean,
     values: Map<String, String>,
     onValueChange: (String, String) -> Unit,
@@ -211,24 +185,7 @@ private fun RealEstateAgencyFormScreen(
                 .fillMaxSize()
                 .background(AppColors.Gray50),
     ) {
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .background(AppColors.White)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = onDismiss) {
-                Icon(painterResource(Res.drawable.close), contentDescription = "Fechar", tint = AppColors.Gray700)
-            }
-            Text(
-                text = if (isEditing) "Editar Agência" else "Nova Agência",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = AppColors.Gray900,
-            )
-        }
+        SubHeader(title = if (isEditing) "Editar Agência" else "Nova Agência", onBack = onDismiss)
         DynamicForm(
             sections = realEstateAgencyFormSections,
             values = values,

@@ -17,8 +17,6 @@ data class ActivitiesUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val successMessage: String? = null,
-    val showForm: Boolean = false,
-    val editingActivity: ActivityDto? = null,
 )
 
 class ActivitiesViewModel(private val api: ActivityApi) : ViewModel() {
@@ -43,25 +41,13 @@ class ActivitiesViewModel(private val api: ActivityApi) : ViewModel() {
         }
     }
 
-    fun showCreateForm() {
-        _uiState.value = _uiState.value.copy(showForm = true, editingActivity = null)
-    }
-
-    fun showEditForm(activity: ActivityDto) {
-        _uiState.value = _uiState.value.copy(showForm = true, editingActivity = activity)
-    }
-
-    fun dismissForm() {
-        _uiState.value = _uiState.value.copy(showForm = false, editingActivity = null)
-    }
-
     fun create(request: CreateActivityRequestDto) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             when (val result = api.create(request)) {
                 is ApiResult.Success -> {
                     _uiState.value = _uiState.value.copy(
-                        isLoading = false, showForm = false,
+                        isLoading = false,
                         successMessage = "Atividade criada com sucesso!",
                     )
                     loadActivities()
@@ -79,7 +65,7 @@ class ActivitiesViewModel(private val api: ActivityApi) : ViewModel() {
             when (val result = api.update(id, request)) {
                 is ApiResult.Success -> {
                     _uiState.value = _uiState.value.copy(
-                        isLoading = false, showForm = false,
+                        isLoading = false,
                         successMessage = "Atividade atualizada com sucesso!",
                     )
                     loadActivities()

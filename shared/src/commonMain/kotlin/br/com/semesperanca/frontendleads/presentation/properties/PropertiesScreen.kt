@@ -29,7 +29,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.com.semesperanca.frontendleads.presentation.sensors.AssociateDeviceFormScreen
 import br.com.semesperanca.frontendleads.presentation.sensors.SensorsScreen
 import br.com.semesperanca.frontendleads.presentation.ui.AddButton
 import br.com.semesperanca.frontendleads.presentation.ui.AppColors
@@ -37,61 +36,42 @@ import br.com.semesperanca.frontendleads.resources.Res
 import br.com.semesperanca.frontendleads.resources.apartment
 import org.jetbrains.compose.resources.painterResource
 
-private sealed interface PropertyOverlay {
-    data object None : PropertyOverlay
-    data object CreateProperty : PropertyOverlay
-    data object AssociateDevice : PropertyOverlay
-}
-
 private enum class PropertiesTab(val label: String) {
     IMOVEIS("Imóveis"),
     SENSORES("Sensores"),
 }
 
 @Composable
-fun PropertiesScreen() {
-    var overlay by remember { mutableStateOf<PropertyOverlay>(PropertyOverlay.None) }
+fun PropertiesScreen(
+    onCreateProperty: () -> Unit = {},
+    onAssociateDevice: () -> Unit = {},
+) {
     var selectedTab by remember { mutableStateOf(PropertiesTab.IMOVEIS) }
 
     Box(modifier = Modifier.fillMaxSize().background(AppColors.Gray50)) {
-        when (overlay) {
-            PropertyOverlay.CreateProperty -> PropertyFormScreen(
-                title = "Novo Imóvel",
-                onBack = { overlay = PropertyOverlay.None },
+        Column(modifier = Modifier.fillMaxSize()) {
+            PropertiesTabRow(
+                selectedTab = selectedTab,
+                onSelect = { selectedTab = it },
             )
-
-            PropertyOverlay.AssociateDevice -> AssociateDeviceFormScreen(
-                onBack = { overlay = PropertyOverlay.None },
-            )
-
-            PropertyOverlay.None -> Column(modifier = Modifier.fillMaxSize()) {
-                PropertiesTabRow(
-                    selectedTab = selectedTab,
-                    onSelect = { selectedTab = it },
-                )
-                when (selectedTab) {
-                    PropertiesTab.IMOVEIS -> PropertiesEmptyState()
-                    PropertiesTab.SENSORES -> SensorsScreen()
-                }
+            when (selectedTab) {
+                PropertiesTab.IMOVEIS -> PropertiesEmptyState()
+                PropertiesTab.SENSORES -> SensorsScreen()
             }
         }
 
-        if (overlay is PropertyOverlay.None) {
-            AddButton(
-                onClick = {
-                    overlay = when (selectedTab) {
-                        PropertiesTab.IMOVEIS -> PropertyOverlay.CreateProperty
-                        PropertiesTab.SENSORES -> PropertyOverlay.AssociateDevice
-                    }
-                },
-                size = 56,
-                contentDescription = when (selectedTab) {
-                    PropertiesTab.IMOVEIS -> "Novo imóvel"
-                    PropertiesTab.SENSORES -> "Associar dispositivo"
-                },
-                modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
-            )
-        }
+        AddButton(
+            onClick = when (selectedTab) {
+                PropertiesTab.IMOVEIS -> onCreateProperty
+                PropertiesTab.SENSORES -> onAssociateDevice
+            },
+            size = 56,
+            contentDescription = when (selectedTab) {
+                PropertiesTab.IMOVEIS -> "Novo imóvel"
+                PropertiesTab.SENSORES -> "Associar dispositivo"
+            },
+            modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
+        )
     }
 }
 

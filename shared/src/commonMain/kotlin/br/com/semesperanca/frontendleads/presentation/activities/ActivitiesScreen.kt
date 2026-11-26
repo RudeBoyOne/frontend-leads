@@ -19,7 +19,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -36,48 +35,24 @@ import br.com.semesperanca.frontendleads.data.dto.ActivityDto
 import br.com.semesperanca.frontendleads.presentation.ui.AddButton
 import br.com.semesperanca.frontendleads.presentation.ui.AppColors
 import br.com.semesperanca.frontendleads.presentation.ui.SearchField
+import br.com.semesperanca.frontendleads.presentation.ui.SubHeader
 import br.com.semesperanca.frontendleads.presentation.ui.form.DynamicForm
 import br.com.semesperanca.frontendleads.resources.Res
 import br.com.semesperanca.frontendleads.resources.calendar_month
 import br.com.semesperanca.frontendleads.resources.check_circle
-import br.com.semesperanca.frontendleads.resources.close
 import br.com.semesperanca.frontendleads.resources.delete
 import br.com.semesperanca.frontendleads.resources.edit
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun ActivitiesScreen() {
+fun ActivitiesScreen(
+    onCreate: () -> Unit = {},
+    onEdit: (ActivityDto) -> Unit = {},
+) {
     val viewModel: ActivitiesViewModel = koinViewModel()
     val state by viewModel.uiState.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.dismissForm() }
-    }
-
-    if (state.showForm) {
-        val editing = state.editingActivity
-        val formValues = remember(editing) {
-            mutableStateMapOf<String, String>().apply { putAll(activityFormDefaults(editing)) }
-        }
-        ActivityFormScreen(
-            isEditing = editing != null,
-            values = formValues,
-            onValueChange = { k, v -> formValues[k] = v },
-            isLoading = state.isLoading,
-            error = state.error,
-            onSubmit = {
-                if (editing != null) {
-                    viewModel.update(editing.id!!, toUpdateActivityRequest(formValues))
-                } else {
-                    viewModel.create(toCreateActivityRequest(formValues))
-                }
-            },
-            onDismiss = { viewModel.dismissForm() },
-        )
-        return
-    }
 
     Box(modifier = Modifier.fillMaxSize().background(AppColors.Gray50)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -123,7 +98,7 @@ fun ActivitiesScreen() {
                     items(state.activities) { activity ->
                         ActivityCard(
                             activity = activity,
-                            onEdit = { viewModel.showEditForm(activity) },
+                            onEdit = { onEdit(activity) },
                             onDelete = { activity.id?.let { viewModel.delete(it) } },
                         )
                     }
@@ -132,7 +107,7 @@ fun ActivitiesScreen() {
         }
 
         AddButton(
-            onClick = { viewModel.showCreateForm() },
+            onClick = onCreate,
             size = 56,
             contentDescription = "Nova Atividade",
             modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
@@ -192,7 +167,7 @@ private fun ActivityCard(activity: ActivityDto, onEdit: () -> Unit, onDelete: ()
 }
 
 @Composable
-private fun ActivityFormScreen(
+fun ActivityFormScreen(
     isEditing: Boolean,
     values: Map<String, String>,
     onValueChange: (String, String) -> Unit,
@@ -206,23 +181,7 @@ private fun ActivityFormScreen(
             .fillMaxSize()
             .background(AppColors.Gray50),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(AppColors.White)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = onDismiss) {
-                Icon(painterResource(Res.drawable.close), contentDescription = "Fechar", tint = AppColors.Gray700)
-            }
-            Text(
-                text = if (isEditing) "Editar Atividade" else "Nova Atividade",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = AppColors.Gray900,
-            )
-        }
+        SubHeader(title = if (isEditing) "Editar Atividade" else "Nova Atividade", onBack = onDismiss)
         DynamicForm(
             sections = activityFormSections,
             values = values,

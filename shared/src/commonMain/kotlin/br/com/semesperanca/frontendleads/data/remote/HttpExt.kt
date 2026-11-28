@@ -124,8 +124,17 @@ private fun decodeErrorMessage(body: String?): String? {
     return try {
         val node = apiJson.parseToJsonElement(body)
         if (node !is JsonObject) return null
-        (node["message"] ?: node["error"])?.let {
-            if (it is JsonPrimitive) it.content.takeIf { s -> s.isNotBlank() } else null
+
+        val fieldMessages = (node["fields"] as? JsonObject)
+            ?.values
+            ?.mapNotNull { (it as? JsonPrimitive)?.content?.takeIf { s -> s.isNotBlank() } }
+            .orEmpty()
+        if (fieldMessages.isNotEmpty()) {
+            fieldMessages.joinToString("; ")
+        } else {
+            (node["message"] ?: node["error"])?.let {
+                if (it is JsonPrimitive) it.content.takeIf { s -> s.isNotBlank() } else null
+            }
         }
     } catch (_: Throwable) {
         null

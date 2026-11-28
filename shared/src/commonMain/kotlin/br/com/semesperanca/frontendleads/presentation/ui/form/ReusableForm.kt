@@ -129,7 +129,7 @@ private fun FormFieldItem(
 }
 
 @Composable
-private fun DropdownField(
+internal fun DropdownField(
     value: String,
     placeholder: String,
     options: List<FormOption>,

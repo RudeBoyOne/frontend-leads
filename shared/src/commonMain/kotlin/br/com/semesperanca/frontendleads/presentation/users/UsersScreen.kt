@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,8 +16,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -30,35 +33,76 @@ import br.com.semesperanca.frontendleads.presentation.ui.AppColors
 import br.com.semesperanca.frontendleads.resources.Res
 import br.com.semesperanca.frontendleads.resources.manage_accounts
 import org.jetbrains.compose.resources.painterResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun UsersScreen(
     onCreate: () -> Unit = {},
-    viewModel: UsersViewModel = koinInject(),
+    viewModel: UsersViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Box(modifier = Modifier.fillMaxSize().background(AppColors.Gray50)) {
-        if (uiState.users.isEmpty()) {
-            UsersEmptyState()
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+    Column(modifier = Modifier.fillMaxSize().background(AppColors.Gray50)) {
+        if (!uiState.error.isNullOrBlank()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(AppColors.Red50)
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                items(uiState.users) { user ->
-                    UserCard(user = user)
+                Text(
+                    text = uiState.error.orEmpty(),
+                    color = AppColors.Red600,
+                    fontSize = 13.sp,
+                    modifier = Modifier.weight(1f),
+                )
+                TextButton(onClick = viewModel::clearError) {
+                    Text("Fechar", color = AppColors.Red600)
                 }
             }
         }
 
-        AddButton(
-            onClick = onCreate,
-            size = 56,
-            contentDescription = "Novo usuário",
-            modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
-        )
+        Box(modifier = Modifier.fillMaxSize()) {
+            when {
+                uiState.isLoading && uiState.users.isEmpty() -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = AppColors.Emerald600,
+                    )
+                }
+                !uiState.error.isNullOrBlank() && uiState.users.isEmpty() -> {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(text = uiState.error.orEmpty(), color = AppColors.Red500, fontSize = 14.sp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        TextButton(onClick = { viewModel.load() }) { Text("Tentar novamente") }
+                    }
+                }
+                uiState.displayUsers.isEmpty() -> {
+                    UsersEmptyState()
+                }
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(uiState.displayUsers) { user ->
+                            UserCard(user = user)
+                        }
+                    }
+                }
+            }
+
+            AddButton(
+                onClick = onCreate,
+                size = 56,
+                contentDescription = "Novo usuário",
+                modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
+            )
+        }
     }
 }
 

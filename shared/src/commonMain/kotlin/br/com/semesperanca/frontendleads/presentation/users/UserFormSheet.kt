@@ -31,11 +31,15 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.semesperanca.frontendleads.data.dto.BranchOfficeDto
+import br.com.semesperanca.frontendleads.data.dto.RealEstateAgencyDto
 import br.com.semesperanca.frontendleads.presentation.ui.AppColors
 import br.com.semesperanca.frontendleads.presentation.ui.ModalSheet
 import br.com.semesperanca.frontendleads.presentation.ui.RoundedTextField
 import br.com.semesperanca.frontendleads.presentation.ui.SubHeader
+import br.com.semesperanca.frontendleads.presentation.ui.form.DropdownField
 import br.com.semesperanca.frontendleads.presentation.ui.form.FormActions
+import br.com.semesperanca.frontendleads.presentation.ui.form.FormOption
 import br.com.semesperanca.frontendleads.resources.Res
 import br.com.semesperanca.frontendleads.resources.visibility
 import br.com.semesperanca.frontendleads.resources.visibility_off
@@ -44,7 +48,9 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun UserFormSheet(
     onDismiss: () -> Unit,
-    onSave: (UserUi) -> Unit,
+    onSave: (UserUi, String) -> Unit,
+    branchOffices: List<BranchOfficeDto> = emptyList(),
+    agencies: List<RealEstateAgencyDto> = emptyList(),
 ) {
     var role by remember { mutableStateOf(UserRole.REAL_ESTATE_AGENT) }
     var name by remember { mutableStateOf("") }
@@ -135,26 +141,43 @@ fun UserFormSheet(
                 RoundedTextField(value = creci, onValueChange = { creci = it }, placeholder = "Digite o CRECI")
                 Spacer(modifier = Modifier.height(14.dp))
 
-                FieldLabel("Filial (ID)")
+                FieldLabel("Filial")
                 Spacer(modifier = Modifier.height(6.dp))
-                RoundedTextField(value = branchOfficeId, onValueChange = { branchOfficeId = it }, placeholder = "ID da filial")
+                val officeOptions = listOf(FormOption(value = "", label = "Nenhum")) +
+                    branchOffices.map { FormOption(value = it.id.orEmpty(), label = it.name ?: it.id.orEmpty()) }
+                DropdownField(
+                    value = branchOfficeId,
+                    placeholder = "Selecione a filial",
+                    options = officeOptions,
+                    onSelect = { branchOfficeId = it },
+                )
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
             UserRole.MANAGER -> {
-                FieldLabel("Filial (ID)")
+                FieldLabel("Filial")
                 Spacer(modifier = Modifier.height(6.dp))
-                RoundedTextField(value = branchOfficeId, onValueChange = { branchOfficeId = it }, placeholder = "ID da filial")
+                val officeOptions = listOf(FormOption(value = "", label = "Nenhum")) +
+                    branchOffices.map { FormOption(value = it.id.orEmpty(), label = it.name ?: it.id.orEmpty()) }
+                DropdownField(
+                    value = branchOfficeId,
+                    placeholder = "Selecione a filial",
+                    options = officeOptions,
+                    onSelect = { branchOfficeId = it },
+                )
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
             UserRole.BRANCH_OWNER -> {
-                FieldLabel("Agência (ID)")
+                FieldLabel("Agência")
                 Spacer(modifier = Modifier.height(6.dp))
-                RoundedTextField(
+                val agencyOptions = listOf(FormOption(value = "", label = "Nenhum")) +
+                    agencies.map { FormOption(value = it.id.orEmpty(), label = it.name ?: it.id.orEmpty()) }
+                DropdownField(
                     value = realEstateAgencyId,
-                    onValueChange = { realEstateAgencyId = it },
-                    placeholder = "ID da agência",
+                    placeholder = "Selecione a agência",
+                    options = agencyOptions,
+                    onSelect = { realEstateAgencyId = it },
                 )
                 Spacer(modifier = Modifier.height(14.dp))
 
@@ -166,7 +189,7 @@ fun UserFormSheet(
         }
 
         if (!error.isNullOrBlank()) {
-            Text(text = error!!, color = AppColors.Red500, fontSize = 13.sp)
+            Text(text = error.orEmpty(), color = AppColors.Red500, fontSize = 13.sp)
             Spacer(modifier = Modifier.height(8.dp))
         }
 
@@ -176,14 +199,20 @@ fun UserFormSheet(
                     name.isBlank() || email.isBlank() || password.isBlank() ->
                         "Preencha nome, e-mail e senha"
 
+                    (role == UserRole.REAL_ESTATE_AGENT || role == UserRole.MANAGER) && password.length < 6 ->
+                        "Senha deve ter no mínimo 6 caracteres"
+
+                    role == UserRole.BRANCH_OWNER && password.length < 8 ->
+                        "Senha deve ter no mínimo 8 caracteres"
+
                     role == UserRole.REAL_ESTATE_AGENT && (creci.isBlank() || branchOfficeId.isBlank()) ->
-                        "Preencha CRECI e Filial (ID)"
+                        "Preencha CRECI e Filial"
 
                     role == UserRole.MANAGER && branchOfficeId.isBlank() ->
-                        "Preencha Filial (ID)"
+                        "Preencha Filial"
 
                     role == UserRole.BRANCH_OWNER && realEstateAgencyId.isBlank() ->
-                        "Preencha Agência (ID)"
+                        "Preencha Agência"
 
                     else -> null
                 }
@@ -199,6 +228,7 @@ fun UserFormSheet(
                             branchOfficeId = branchOfficeId.trim().takeIf { it.isNotEmpty() },
                             realEstateAgencyId = realEstateAgencyId.trim().takeIf { it.isNotEmpty() },
                         ),
+                        password,
                     )
                 }
             },
@@ -212,8 +242,6 @@ fun UserFormSheet(
                 phone = ""
                 error = null
             },
-            saveLabel = "Gravar",
-            clearLabel = "Limpar Campos",
         )
     }
 }

@@ -2,14 +2,21 @@ package br.com.semesperanca.frontendleads.di
 
 import br.com.semesperanca.frontendleads.data.remote.ActivityApi
 import br.com.semesperanca.frontendleads.data.remote.ApiClient
+import br.com.semesperanca.frontendleads.data.remote.AuthApi
 import br.com.semesperanca.frontendleads.data.remote.BranchOfficeApi
 import br.com.semesperanca.frontendleads.data.remote.LeadApi
 import br.com.semesperanca.frontendleads.data.remote.RealEstateAgencyApi
 import br.com.semesperanca.frontendleads.data.remote.TeamApi
+import br.com.semesperanca.frontendleads.data.remote.UserApi
+import br.com.semesperanca.frontendleads.data.repository.DefaultAuthRepository
 import br.com.semesperanca.frontendleads.data.repository.DefaultLeadRepository
+import br.com.semesperanca.frontendleads.data.repository.DefaultUserRepository
 import br.com.semesperanca.frontendleads.data.storage.KeyValueStore
+import br.com.semesperanca.frontendleads.data.storage.SessionStorage
 import br.com.semesperanca.frontendleads.data.storage.createKeyValueStore
+import br.com.semesperanca.frontendleads.domain.repository.AuthRepository
 import br.com.semesperanca.frontendleads.domain.repository.LeadRepository
+import br.com.semesperanca.frontendleads.domain.repository.UserRepository
 import br.com.semesperanca.frontendleads.presentation.activities.ActivitiesViewModel
 import br.com.semesperanca.frontendleads.presentation.agencies.RealEstateAgencyViewModel
 import br.com.semesperanca.frontendleads.presentation.auth.LoginViewModel
@@ -27,12 +34,17 @@ import org.koin.dsl.module
 private val dataModule =
     module {
         single<KeyValueStore> { createKeyValueStore() }
-        single { ApiClient() }
+        single { SessionStorage(get()) }
+        single { ApiClient(session = get()) }
+        single { AuthApi(get()) }
         single { LeadApi(get()) }
         single { TeamApi(get()) }
         single { ActivityApi(get()) }
         single { RealEstateAgencyApi(get()) }
         single { BranchOfficeApi(get()) }
+        single { UserApi(get()) }
+        single<AuthRepository> { DefaultAuthRepository(get(), get()) }
+        single<UserRepository> { DefaultUserRepository(get()) }
         single<LeadRepository> { DefaultLeadRepository(get()) }
     }
 
@@ -42,7 +54,7 @@ private val presentationModule =
         viewModelOf(::LeadDetailViewModel)
         viewModelOf(::PropertyFormViewModel)
         viewModelOf(::LoginViewModel)
-        single { UsersViewModel() }
+        viewModelOf(::UsersViewModel)
         viewModelOf(::TeamsViewModel)
         viewModelOf(::ActivitiesViewModel)
         viewModelOf(::RealEstateAgencyViewModel)

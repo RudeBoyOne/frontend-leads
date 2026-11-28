@@ -2,16 +2,21 @@ package br.com.semesperanca.frontendleads.presentation.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
+import br.com.semesperanca.frontendleads.data.remote.ApiResult
+import br.com.semesperanca.frontendleads.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(
+    private val repository: AuthRepository,
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(AuthUiState())
+    private val _uiState = MutableStateFlow(
+        AuthUiState(isAuthenticated = repository.isLoggedIn()),
+    )
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
     fun onEmailChange(value: String) {
@@ -35,20 +40,32 @@ class LoginViewModel : ViewModel() {
             return
         }
 
+        val email = current.email.trim()
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            delay(500)
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    error = null,
-                    isAuthenticated = true,
-                )
+
+            when (val result = repository.login(email, current.password)) {
+                is ApiResult.Success -> _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        email = email,
+                        password = "",
+                        isAuthenticated = true,
+                    )
+                }
+                is ApiResult.Error -> _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = result.message,
+                    )
+                }
             }
         }
     }
 
     fun logout() {
+        repository.logout()
         _uiState.update { AuthUiState() }
     }
 }

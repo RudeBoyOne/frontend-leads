@@ -52,7 +52,6 @@ import br.com.semesperanca.frontendleads.presentation.teams.toUpdateTeamRequest
 import br.com.semesperanca.frontendleads.presentation.users.UserFormSheet
 import br.com.semesperanca.frontendleads.presentation.users.UsersScreen
 import br.com.semesperanca.frontendleads.presentation.users.UsersViewModel
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -279,13 +278,16 @@ fun AppNavigation() {
                     }
 
                     entry<AppNavKey.UserForm> {
-                        val viewModel: UsersViewModel = koinInject()
+                        val viewModel: UsersViewModel = koinViewModel()
+                        val state by viewModel.uiState.collectAsState()
                         UserFormSheet(
                             onDismiss = { navigator.goBack() },
-                            onSave = { user ->
-                                viewModel.addUser(user)
+                            onSave = { user, password ->
+                                viewModel.addUser(user, password)
                                 navigator.goBack()
                             },
+                            branchOffices = state.branchOffices,
+                            agencies = state.agencies,
                         )
                     }
                 },

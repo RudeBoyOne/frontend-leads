@@ -38,7 +38,7 @@ sealed interface AppNavKey : NavKey {
     data class ActivityForm(val id: String? = null, val values: Map<String, String> = emptyMap()) : AppNavKey
 
     @Serializable
-    data object PropertyForm : AppNavKey
+    data class PropertyForm(val id: String? = null, val values: Map<String, String> = emptyMap()) : AppNavKey
 
     @Serializable
     data object AssociateDevice : AppNavKey

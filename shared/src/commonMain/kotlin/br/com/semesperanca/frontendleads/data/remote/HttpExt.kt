@@ -129,12 +129,20 @@ private fun decodeErrorMessage(body: String?): String? {
             ?.values
             ?.mapNotNull { (it as? JsonPrimitive)?.content?.takeIf { s -> s.isNotBlank() } }
             .orEmpty()
-        if (fieldMessages.isNotEmpty()) {
-            fieldMessages.joinToString("; ")
-        } else {
-            (node["message"] ?: node["error"])?.let {
-                if (it is JsonPrimitive) it.content.takeIf { s -> s.isNotBlank() } else null
+        val message =
+            if (fieldMessages.isNotEmpty()) {
+                fieldMessages.joinToString("; ")
+            } else {
+                (node["message"] ?: node["error"])?.let {
+                    if (it is JsonPrimitive) it.content.takeIf { s -> s.isNotBlank() } else null
+                }
             }
+        if (message.orEmpty().contains("JSON parse error", ignoreCase = true) ||
+            message.orEmpty().contains("Failed to read request", ignoreCase = true)
+        ) {
+            "Dados inválidos enviados ao servidor. Confira os campos e tente novamente."
+        } else {
+            message
         }
     } catch (_: Throwable) {
         null

@@ -13,11 +13,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,12 +35,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.semesperanca.frontendleads.data.dto.PropertyDto
 import br.com.semesperanca.frontendleads.presentation.sensors.SensorsScreen
 import br.com.semesperanca.frontendleads.presentation.ui.AddButton
 import br.com.semesperanca.frontendleads.presentation.ui.AppColors
+import br.com.semesperanca.frontendleads.presentation.ui.Formatters
+import br.com.semesperanca.frontendleads.presentation.ui.Pill
+import br.com.semesperanca.frontendleads.presentation.ui.SearchField
 import br.com.semesperanca.frontendleads.resources.Res
 import br.com.semesperanca.frontendleads.resources.apartment
+import br.com.semesperanca.frontendleads.resources.delete
+import br.com.semesperanca.frontendleads.resources.edit
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.viewmodel.koinViewModel
 
 private enum class PropertiesTab(val label: String) {
     IMOVEIS("Imóveis"),
@@ -44,9 +57,13 @@ private enum class PropertiesTab(val label: String) {
 @Composable
 fun PropertiesScreen(
     onCreateProperty: () -> Unit = {},
+    onEditProperty: (PropertyDto) -> Unit = {},
     onAssociateDevice: () -> Unit = {},
 ) {
+    val viewModel: PropertiesViewModel = koinViewModel()
+    val state by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableStateOf(PropertiesTab.IMOVEIS) }
+    var searchQuery by remember { mutableStateOf("") }
 
     Box(modifier = Modifier.fillMaxSize().background(AppColors.Gray50)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -55,8 +72,50 @@ fun PropertiesScreen(
                 onSelect = { selectedTab = it },
             )
             when (selectedTab) {
-                PropertiesTab.IMOVEIS -> PropertiesEmptyState()
                 PropertiesTab.SENSORES -> SensorsScreen()
+                PropertiesTab.IMOVEIS -> {
+                    SearchField(
+                        query = searchQuery,
+                        onQueryChange = {
+                            searchQuery = it
+                            viewModel.onSearchChange(it)
+                            if (it.isBlank()) viewModel.loadProperties() else viewModel.search(it.trim())
+                        },
+                        placeholder = "Buscar por título...",
+                    )
+
+                    state.error?.let { error ->
+                        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                            Text(text = error, color = AppColors.Red500, fontSize = 13.sp)
+                            TextButton(onClick = viewModel::clearMessages) {
+                                Text(text = "Fechar", color = AppColors.Emerald600, fontSize = 13.sp)
+                            }
+                        }
+                    }
+
+                    when {
+                        state.isLoading && state.properties.isEmpty() ->
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(color = AppColors.Emerald600)
+                            }
+
+                        state.displayProperties.isEmpty() -> PropertiesEmptyState()
+
+                        else ->
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                items(state.displayProperties) { property ->
+                                    PropertyCard(
+                                        property = property,
+                                        onEdit = { onEditProperty(property) },
+                                        onDelete = { viewModel.delete(property.id) },
+                                    )
+                                }
+                            }
+                    }
+                }
             }
         }
 
@@ -105,6 +164,79 @@ private fun PropertiesTabRow(
             }
         }
         HorizontalDivider(thickness = 1.dp, color = AppColors.Gray200)
+    }
+}
+
+@Composable
+private fun PropertyCard(
+    property: PropertyDto,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(AppColors.White, RoundedCornerShape(12.dp))
+                .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = property.title,
+                    fontWeight = FontWeight.SemiBold,
+                    color = AppColors.Gray900,
+                    fontSize = 15.sp,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                Spacer(modifier = Modifier.size(8.dp))
+                val statusLabel = PropertyStatus.entries.firstOrNull { it.value == property.status }?.label
+                Pill(
+                    text = statusLabel ?: if (property.active) "Ativo" else "Inativo",
+                    backgroundColor =
+                        if (property.active && property.status != PropertyStatus.INACTIVE.value) {
+                            AppColors.Emerald600
+                        } else {
+                            AppColors.Gray400
+                        },
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            property.price?.let {
+                Text(text = Formatters.formatCurrency(it), color = AppColors.Emerald700, fontSize = 14.sp)
+            }
+            val details = listOfNotNull(property.propertyType, property.city, property.state).joinToString(" · ")
+            if (details.isNotBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = details, color = AppColors.Gray500, fontSize = 13.sp)
+            }
+            val rooms = listOfNotNull(
+                property.bedrooms?.let { "$it quartos" },
+                property.bathrooms?.let { "$it banheiros" },
+            ).joinToString(" · ")
+            if (rooms.isNotBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = rooms, color = AppColors.Gray400, fontSize = 12.sp)
+            }
+        }
+        Row {
+            IconButton(onClick = onEdit) {
+                Icon(
+                    painter = painterResource(Res.drawable.edit),
+                    contentDescription = "Editar imóvel",
+                    tint = AppColors.Emerald600,
+                )
+            }
+            IconButton(onClick = onDelete) {
+                Icon(
+                    painter = painterResource(Res.drawable.delete),
+                    contentDescription = "Excluir imóvel",
+                    tint = AppColors.Red400,
+                )
+            }
+        }
     }
 }
 

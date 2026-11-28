@@ -9,6 +9,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import br.com.semesperanca.frontendleads.data.dto.ActivityDto
 import br.com.semesperanca.frontendleads.data.dto.BranchOfficeDto
+import br.com.semesperanca.frontendleads.data.dto.PropertyDto
 import br.com.semesperanca.frontendleads.data.dto.RealEstateAgencyDto
 import br.com.semesperanca.frontendleads.data.dto.TeamDto
 import br.com.semesperanca.frontendleads.presentation.activities.ActivityFormScreen
@@ -40,8 +41,14 @@ import br.com.semesperanca.frontendleads.presentation.leads.leadFormDefaults
 import br.com.semesperanca.frontendleads.presentation.navigation.AppNavKey
 import br.com.semesperanca.frontendleads.presentation.navigation.Navigator
 import br.com.semesperanca.frontendleads.presentation.navigation.rememberAppNavigationState
-import br.com.semesperanca.frontendleads.presentation.properties.PropertyFormScreen
 import br.com.semesperanca.frontendleads.presentation.properties.PropertiesScreen
+import br.com.semesperanca.frontendleads.presentation.properties.PropertiesViewModel
+import br.com.semesperanca.frontendleads.presentation.properties.PropertyFormScreen
+import br.com.semesperanca.frontendleads.presentation.properties.PropertyFormViewModel
+import br.com.semesperanca.frontendleads.presentation.properties.propertyFormDefaults
+import br.com.semesperanca.frontendleads.presentation.properties.propertyFormSections
+import br.com.semesperanca.frontendleads.presentation.properties.toCreatePropertyRequest
+import br.com.semesperanca.frontendleads.presentation.properties.toUpdatePropertyRequest
 import br.com.semesperanca.frontendleads.presentation.sensors.AssociateDeviceFormScreen
 import br.com.semesperanca.frontendleads.presentation.teams.TeamFormScreen
 import br.com.semesperanca.frontendleads.presentation.teams.TeamsScreen
@@ -181,15 +188,54 @@ fun AppNavigation() {
 
                     entry<AppNavKey.Properties> {
                         PropertiesScreen(
-                            onCreateProperty = { navigator.navigate(AppNavKey.PropertyForm) },
+                            onCreateProperty = {
+                                navigator.navigate(AppNavKey.PropertyForm(values = propertyFormDefaults()))
+                            },
+                            onEditProperty = { property: PropertyDto ->
+                                navigator.navigate(
+                                    AppNavKey.PropertyForm(
+                                        id = property.id,
+                                        values = propertyFormDefaults(property),
+                                    ),
+                                )
+                            },
                             onAssociateDevice = { navigator.navigate(AppNavKey.AssociateDevice) },
                         )
                     }
 
-                    entry<AppNavKey.PropertyForm> {
+                    entry<AppNavKey.PropertyForm> { key ->
+                        val viewModel: PropertyFormViewModel = koinViewModel()
+                        val listViewModel: PropertiesViewModel = koinViewModel()
+                        val state by viewModel.uiState.collectAsState()
+                        val values =
+                            remember(key) {
+                                mutableStateMapOf<String, String>().apply { putAll(key.values) }
+                            }
+                        val id = key.id
+                        val onBack: () -> Unit = { navigator.goBack() }
+                        val afterSave: () -> Unit = {
+                            listViewModel.loadProperties()
+                            navigator.goBack()
+                        }
                         PropertyFormScreen(
-                            title = "Novo Imóvel",
-                            onBack = { navigator.goBack() },
+                            isEditing = id != null,
+                            sections = propertyFormSections(state.branchOffices, isEditing = id != null),
+                            values = values,
+                            onValueChange = { k, v -> values[k] = v },
+                            isLoading = state.isLoading,
+                            error = state.error,
+                            onSubmit = {
+                                if (id != null) {
+                                    viewModel.update(id, toUpdatePropertyRequest(values), afterSave)
+                                } else {
+                                    viewModel.create(toCreatePropertyRequest(values), afterSave)
+                                }
+                            },
+                            onClear = {
+                                values.clear()
+                                values.putAll(propertyFormDefaults())
+                            },
+                            onBack = onBack,
                         )
                     }
 

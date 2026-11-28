@@ -5,17 +5,20 @@ import br.com.semesperanca.frontendleads.data.remote.ApiClient
 import br.com.semesperanca.frontendleads.data.remote.AuthApi
 import br.com.semesperanca.frontendleads.data.remote.BranchOfficeApi
 import br.com.semesperanca.frontendleads.data.remote.LeadApi
+import br.com.semesperanca.frontendleads.data.remote.PropertyApi
 import br.com.semesperanca.frontendleads.data.remote.RealEstateAgencyApi
 import br.com.semesperanca.frontendleads.data.remote.TeamApi
 import br.com.semesperanca.frontendleads.data.remote.UserApi
 import br.com.semesperanca.frontendleads.data.repository.DefaultAuthRepository
 import br.com.semesperanca.frontendleads.data.repository.DefaultLeadRepository
+import br.com.semesperanca.frontendleads.data.repository.DefaultPropertyRepository
 import br.com.semesperanca.frontendleads.data.repository.DefaultUserRepository
 import br.com.semesperanca.frontendleads.data.storage.KeyValueStore
 import br.com.semesperanca.frontendleads.data.storage.SessionStorage
 import br.com.semesperanca.frontendleads.data.storage.createKeyValueStore
 import br.com.semesperanca.frontendleads.domain.repository.AuthRepository
 import br.com.semesperanca.frontendleads.domain.repository.LeadRepository
+import br.com.semesperanca.frontendleads.domain.repository.PropertyRepository
 import br.com.semesperanca.frontendleads.domain.repository.UserRepository
 import br.com.semesperanca.frontendleads.presentation.activities.ActivitiesViewModel
 import br.com.semesperanca.frontendleads.presentation.agencies.RealEstateAgencyViewModel
@@ -23,6 +26,7 @@ import br.com.semesperanca.frontendleads.presentation.auth.LoginViewModel
 import br.com.semesperanca.frontendleads.presentation.branches.BranchOfficeViewModel
 import br.com.semesperanca.frontendleads.presentation.leads.LeadDetailViewModel
 import br.com.semesperanca.frontendleads.presentation.leads.LeadsViewModel
+import br.com.semesperanca.frontendleads.presentation.properties.PropertiesViewModel
 import br.com.semesperanca.frontendleads.presentation.properties.PropertyFormViewModel
 import br.com.semesperanca.frontendleads.presentation.teams.TeamsViewModel
 import br.com.semesperanca.frontendleads.presentation.users.UsersViewModel
@@ -43,15 +47,18 @@ private val dataModule =
         single { RealEstateAgencyApi(get()) }
         single { BranchOfficeApi(get()) }
         single { UserApi(get()) }
+        single { PropertyApi(get()) }
         single<AuthRepository> { DefaultAuthRepository(get(), get()) }
         single<UserRepository> { DefaultUserRepository(get()) }
         single<LeadRepository> { DefaultLeadRepository(get()) }
+        single<PropertyRepository> { DefaultPropertyRepository(get()) }
     }
 
 private val presentationModule =
     module {
         viewModelOf(::LeadsViewModel)
         viewModelOf(::LeadDetailViewModel)
+        viewModelOf(::PropertiesViewModel)
         viewModelOf(::PropertyFormViewModel)
         viewModelOf(::LoginViewModel)
         viewModelOf(::UsersViewModel)
